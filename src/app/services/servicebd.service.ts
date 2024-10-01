@@ -17,7 +17,8 @@ export class ServicebdService {
   registroNoticia: string = "INSERT INTO noticia(titulo, texto) VALUES('Noticia 1', 'Texto de la noticia 1');";
 
   //Variable para guardar registros de un SELECT (ResulSet)
-  listadoNoticias = new BehaviorSubject([]);
+  //Es Observable a secas, ahi almacenaremos la configuración
+  listadoNoticias = new BehaviorSubject([]); //-> el [] significa que es un arreglo con todos los registros que traiga la consulta 
 
   //Variable para manipular el estado de la BD
   private isDBReady: BehaviorSubject<boolean> = new BehaviorSubject(false);
@@ -26,7 +27,7 @@ export class ServicebdService {
     this.crearDB();
   }
 
-  //Funcion para retornar observables
+  //Funcion para un observable de tipo Noticias (una clase)
   fetchNoticias():Observable<Noticias[]> {
     return this.listadoNoticias.asObservable();
   }
@@ -51,11 +52,13 @@ export class ServicebdService {
   crearDB(){
     this.platform.ready().then(() => {
       //Crear la base de datos
+      //Si existe obtiene la conexión
       this.sqlite.create({
         name: 'noticias.db',
         location: 'default'
       })
-      //Si se crea la BD -> Crear las tablas
+      //Si no esta creada, la crea
+      //Si existe, obtiene la conexión
       .then((db:SQLiteObject) => {
         //Si crear la DB, guarda ese objeto en el atributo database
         this.database = db;
@@ -76,6 +79,7 @@ export class ServicebdService {
     await this.database.executeSql(this.tablaNoticia, [])
     
     //Poblar la tabla de noticia
+    //executeSql(sentenciaEjecutar, [Parametros que necesite la sentencia])
     await this.database.executeSql(this.registroNoticia, [])
     } catch (error) {
       this.presentAlert('Poblado de Tablas', "Error al poblar las tablas:" + JSON.stringify(error));
